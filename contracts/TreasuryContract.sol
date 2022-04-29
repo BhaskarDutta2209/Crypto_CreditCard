@@ -13,6 +13,7 @@ contract TreasuryContract {
     address private WETH;
     address private router;
     address private owner;
+    address private ccIssuer;
 
     mapping(address => bool) private isValidCC;
 
@@ -32,6 +33,7 @@ contract TreasuryContract {
         router = _router;
         WETH = _WETH;
         owner = msg.sender;
+        ccIssuer = msg.sender;
     }
 
     function sendToken(
@@ -113,8 +115,13 @@ contract TreasuryContract {
         owner = _newOwner;
     }
 
+    function setCCIssuer(address _ccIssuer) public {
+        require(msg.sender == owner, "Only the owner can set the CC Issuer");
+        ccIssuer = _ccIssuer;
+    }
+
     function addCCAddress(address _ccAddress) public {
-        require(msg.sender == owner, "Only the owner can add a CC address");
+        require(msg.sender == ccIssuer, "Only the CC Issuer can add a CC address");
         isValidCC[_ccAddress] = true;
     }
 
