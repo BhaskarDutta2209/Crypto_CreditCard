@@ -119,4 +119,8 @@ contract UserContract {
         require(msg.sender == owner);
         nonce += 1;
     }
+
+    function getCurrentNonce() public view returns (uint256) {
+        return nonce;
+    }
 }
