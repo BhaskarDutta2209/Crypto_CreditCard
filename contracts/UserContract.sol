@@ -33,8 +33,8 @@ contract UserContract {
         bytes memory _signature,
         address _tokenAddress
     ) public {
-        require(canCharge(_amount));
-        require(verifySignature(_amount, _signature));
+        require(canCharge(_amount), "Don't have enough balance");
+        require(verifySignature(_amount, _signature), "Signature not verified");
 
         // Ask treasury to transfer the funds
         ITreasuryContract(treasuryAddress).sendToken(
@@ -51,12 +51,17 @@ contract UserContract {
         emit CC_Charged(msg.sender, _amount);
     }
 
-    function getMessageHash(string memory _message)
-        internal
-        pure
+    function getCurrentPayloadHash(uint256 _amount, address _targetedReceiver)
+        public
+        view
         returns (bytes32)
     {
-        return keccak256(abi.encodePacked(_message));
+        // Message Format => <Nonce>_<Receiver Address>_<Amount>
+        // Example => 0_0x1234567890123456789012345678901234567890_100
+        string memory _payload = string(
+            abi.encodePacked(nonce, "_", _targetedReceiver, "_", _amount)
+        );
+        return keccak256(abi.encodePacked(_payload));
     }
 
     function verifySignature(uint256 _amount, bytes memory _signature)
@@ -64,13 +69,8 @@ contract UserContract {
         view
         returns (bool)
     {
-        // Message Format => <Nonce>_<Receiver Address>_<Amount>
-        // Example => 0_0x1234567890123456789012345678901234567890_100
-        string memory _message = string(
-            abi.encodePacked(nonce, "_", msg.sender, "_", _amount)
-        );
-        bytes32 messageHash = getMessageHash(_message);
-        bytes32 ethSignedMessageHash = getEthSignedMessageHash(messageHash);
+        bytes32 payloadHash = getCurrentPayloadHash(_amount, msg.sender);
+        bytes32 ethSignedMessageHash = getEthSignedMessageHash(payloadHash);
 
         return recover(ethSignedMessageHash, _signature) == owner;
     }
