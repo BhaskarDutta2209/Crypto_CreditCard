@@ -129,4 +129,6 @@ contract TreasuryContract {
         require(msg.sender == owner, "Only the owner can remove a CC address");
         isValidCC[_ccAddress] = false;
     }
+
+    receive() external payable {}
 }
