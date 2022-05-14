@@ -10,6 +10,8 @@ contract CCIssuer {
     address private ownerDaoAddress;
     address private treasuryAddress;
 
+    mapping (address => address[]) private issuedCC;
+
     event CCIssued(address indexed to, address indexed ccAddress, uint256 indexed amount);
 
     constructor(address _ownerDaoAddress, address _treasuryAddress) {
@@ -30,6 +32,18 @@ contract CCIssuer {
         // Add it to the treasury
         ITreasuryContract(treasuryAddress).addCCAddress(address(userContract));
 
+        // Add the record to issuedCC
+        issuedCC[_userAddress].push(address(userContract));
+
         emit CCIssued(_userAddress, address(userContract), _inititalBalance);
+    }
+
+    function getNoOfCC(address _userAddress) public view returns (uint256) {
+        return issuedCC[_userAddress].length;
+    }
+
+    function getCCAddress(address _userAddress, uint256 _index) public view returns (address) {
+        require(_index < issuedCC[_userAddress].length, "Index out of bounds");
+        return issuedCC[_userAddress][_index];
     }
 }
